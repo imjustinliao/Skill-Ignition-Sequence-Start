@@ -5,7 +5,7 @@ license: MIT
 compatibility: Any coding agent that can read files and run shell commands. Python 3.8+ is optional, for the scripts.
 metadata:
   author: Justin Liao
-  version: "0.4.0"
+  version: "0.4.1"
   repository: imjustinliao/Skill-Ignition-Sequence-Start
 ---
 

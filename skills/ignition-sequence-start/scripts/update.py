@@ -73,9 +73,20 @@ def fetch(url):
         return out.stdout
 
 
-def remote_files(repository):
-    """{relative path: (bytes, executable)} for the skill folder on the main branch."""
-    data = fetch("https://codeload.github.com/%s/tar.gz/refs/heads/main" % repository)
+def latest_commit(repository):
+    """The main branch's commit id, straight from GitHub (never a cached copy), or None."""
+    try:
+        out = subprocess.run(["git", "ls-remote", "https://github.com/%s.git" % repository,
+                              "refs/heads/main"], capture_output=True, text=True, timeout=10)
+    except (OSError, subprocess.TimeoutExpired):
+        return None
+    sha = out.stdout.split()[0] if out.returncode == 0 and out.stdout.strip() else None
+    return sha if sha and re.fullmatch(r"[0-9a-f]{40}", sha) else None
+
+
+def remote_files(repository, commit):
+    """{relative path: (bytes, executable)} for the skill folder at that commit (or main)."""
+    data = fetch("https://codeload.github.com/%s/tar.gz/%s" % (repository, commit or "refs/heads/main"))
     files = {}
     with tarfile.open(fileobj=io.BytesIO(data), mode="r:gz") as archive:
         for member in archive.getmembers():
@@ -122,10 +133,16 @@ def update_git(skill_dir, check, say):
 def update_copy(skill_dir, repository, check, force, say):
     old_version = meta(skill_dir)[0]
     manifest_path = skill_dir / MANIFEST
-    manifest = json.loads(manifest_path.read_text()) if manifest_path.exists() else None
+    saved = json.loads(manifest_path.read_text()) if manifest_path.exists() else None
+    if saved is not None and "files" not in saved:
+        saved = {"commit": None, "files": saved}
+    manifest = saved["files"] if saved else None
     local = local_hashes(skill_dir)
+    commit = latest_commit(repository)
+    if commit and saved and saved.get("commit") == commit and not force:
+        return  # nothing new upstream since the last update
     try:
-        remote = remote_files(repository)
+        remote = remote_files(repository, commit)
     except Exception:
         return  # offline or blocked: never get in the way of the session
     remote_hashes = {rel: sha(data) for rel, (data, _) in remote.items()}
@@ -133,8 +150,8 @@ def update_copy(skill_dir, repository, check, force, say):
     tracked = set(manifest) if manifest else set(local)
     current = {rel: h for rel, h in local.items() if rel in tracked}
     if current == remote_hashes:
-        if manifest is None and not check:
-            manifest_path.write_text(json.dumps(remote_hashes, indent=1, sort_keys=True))
+        if not check:
+            save_manifest(manifest_path, commit, remote_hashes)
         return
     edited = sorted(rel for rel in (manifest or {}) if rel in local and local[rel] != manifest[rel])
     if edited and not force:
@@ -146,36 +163,39 @@ def update_copy(skill_dir, repository, check, force, say):
         say("Skill update available: %s -> %s." % (old_version, new_version))
         return
 
+    to_write = [rel for rel in remote if local.get(rel) != remote_hashes[rel]]
+    to_remove = [rel for rel in sorted(tracked - set(remote)) if (skill_dir / rel).is_file()]
+    if not to_write and not to_remove:
+        save_manifest(manifest_path, commit, remote_hashes)
+        return
+
     stamp = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
     backup = BACKUPS / ("backup-%s-%s" % (old_version, stamp))
     shutil.copytree(skill_dir, backup, ignore=shutil.ignore_patterns("__pycache__"))
     for old in sorted(BACKUPS.glob("backup-*"), key=lambda p: p.stat().st_mtime)[:-KEEP_BACKUPS]:
         shutil.rmtree(old, ignore_errors=True)
 
-    changed = 0
-    for rel, (data, executable) in remote.items():
+    for rel in to_write:
+        data, executable = remote[rel]
         target = skill_dir / rel
-        if local.get(rel) == remote_hashes[rel]:
-            continue
         target.parent.mkdir(parents=True, exist_ok=True)
         temp = target.with_name(target.name + ".updating")
         temp.write_bytes(data)
         if executable:
             temp.chmod(temp.stat().st_mode | 0o111)
         os.replace(temp, target)
-        changed += 1
-    removed = 0
-    for rel in sorted(tracked - set(remote)):
-        path = skill_dir / rel
-        if path.is_file():
-            path.unlink()
-            removed += 1
+    for rel in to_remove:
+        (skill_dir / rel).unlink()
     for folder in sorted((p for p in skill_dir.rglob("*") if p.is_dir()), reverse=True):
         if not any(folder.iterdir()):
             folder.rmdir()
-    manifest_path.write_text(json.dumps(remote_hashes, indent=1, sort_keys=True))
+    save_manifest(manifest_path, commit, remote_hashes)
     say("Skill updated %s -> %s (%d file(s) changed, %d removed; backup in %s). "
-        "Re-read SKILL.md before continuing." % (old_version, new_version, changed, removed, backup))
+        "Re-read SKILL.md before continuing." % (old_version, new_version, len(to_write), len(to_remove), backup))
+
+
+def save_manifest(path, commit, hashes):
+    path.write_text(json.dumps({"commit": commit, "files": hashes}, indent=1, sort_keys=True))
 
 
 def meta_from_bytes(data):

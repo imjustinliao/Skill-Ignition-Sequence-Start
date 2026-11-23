@@ -96,7 +96,8 @@ def check_progress(root, last_commit_date):
 
 
 def version_tuple(value):
-    return tuple(int(n) for n in re.findall(r"\d+", value)[:3])
+    """MAJOR.MINOR only: patch releases never change a project's docs."""
+    return tuple(int(n) for n in re.findall(r"\d+", value)[:2])
 
 
 def check_version(progress_text):

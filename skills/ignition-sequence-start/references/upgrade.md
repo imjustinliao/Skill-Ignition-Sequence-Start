@@ -1,6 +1,6 @@
 # Upgrading a project set up with an older version
 
-A project keeps the skill version that set it up at the top of `docs/progress.md`: `<!-- ignition-sequence-start: X -->`. No marker, but `AGENTS.md` and `docs/progress.md` exist: treat it as 0.2. This skill's version is in `SKILL.md`. When the project is older, bring it forward in place: nothing lost, setup not re-run, the plan unchanged.
+A project keeps the skill version that set it up at the top of `docs/progress.md`: `<!-- ignition-sequence-start: X -->`. No marker, but `AGENTS.md` and `docs/progress.md` exist: treat it as 0.2. This skill's version is in `SKILL.md`. When the project is older (major or minor version; patch releases never change project docs), bring it forward in place: nothing lost, setup not re-run, the plan unchanged.
 
 ## When, by stage
 
