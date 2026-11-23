@@ -39,6 +39,7 @@ In a hurry? Type `ignition sequence start, express` and you only describe the go
 
 After setup, just talk to your agent normally. These phrases also work in any agent, any time:
 
+<!-- Keep in sync with skills/ignition-sequence-start/SKILL.md › Cheat sheet and assets/templates/AGENTS.md › Owner shortcuts. -->
 | Say | What happens |
 |-----|--------------|
 | **continue** | Picks up where the last session stopped |
@@ -47,6 +48,7 @@ After setup, just talk to your agent normally. These phrases also work in any ag
 | a numbered list of fixes | Each fix is tracked and reported back one by one |
 | **new feature: …** | Added to the plan before any code is written |
 | **change …** | Updates anything from setup, for example *"change the plan: do login first"*, *"update the design: darker colors"*, *"change my rules: commit when tests pass"* |
+| **keep going** | Works on its own while you're away, within limits you agree first |
 | **help** | Shows this list |
 
 That's it. The rest is optional.

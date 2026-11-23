@@ -1,6 +1,6 @@
 # Progress
 
-<!-- ignition-sequence-start: 0.2.0 -->
+<!-- ignition-sequence-start: 0.2.3 -->
 Newest entries first. This is the handoff note for the next session or agent: keep it short. Replace the example comments when filling a field.
 
 ## Current status

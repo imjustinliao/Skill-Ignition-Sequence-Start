@@ -5,7 +5,7 @@ license: MIT
 compatibility: Any coding agent that can read files and run shell commands (Claude Code, Codex, Cursor, Gemini CLI, Grok Build, GitHub Copilot, OpenCode, Cline, Goose and others). Python 3 is optional, for the scaffold script.
 metadata:
   author: Justin Liao
-  version: "0.2.0"
+  version: "0.2.3"
 ---
 
 # Ignition Sequence Start
@@ -84,6 +84,7 @@ When the plan is approved, end setup with the cheat sheet below, so the owner kn
 
 Show this after setup and whenever the owner asks for help, in the owner's language:
 
+<!-- Keep in sync with README.md › Keep going and assets/templates/AGENTS.md › Owner shortcuts. -->
 ```text
 You're set up. From here, just talk to me normally. These also work in any agent:
 
@@ -93,6 +94,7 @@ You're set up. From here, just talk to me normally. These also work in any agent
   1. … 2. …       a numbered list of fixes, each tracked and reported back
   new feature: …  added to the plan before any code
   change …        update anything from setup: goal, features, design, plan, rules
+  keep going      work on its own while you're away, within limits you agree first
   help            show this list
 ```
 

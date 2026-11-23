@@ -6,7 +6,7 @@
   },
   "metadata": {
     "description": "Ignition Sequence Start: set up any project for coding agents with a step-by-step intake, a durable docs system, automatic session handoffs and contract-based parallel agents.",
-    "version": "0.2.0"
+    "version": "0.2.3"
   },
   "plugins": [
     {
