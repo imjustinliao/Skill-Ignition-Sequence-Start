@@ -40,6 +40,7 @@ Write for a stranger: no "as discussed", no references to the chat.
    - Placeholders left in `AGENTS.md`, or open Setup items? Offer to finish them before building.
    - Did the owner edit `docs/` or `AGENTS.md` since the last session (`git log -- docs AGENTS.md`)? Mention it and follow their version.
    - Is the approval mode blank? Treat it as `ask`.
+   - Is the version marker at the top of `progress.md` older than this skill (or missing)? Offer the upgrade at a safe point for the project's stage (`upgrade.md`).
 4. **If `progress.md` does not explain the latest commits or uncommitted changes**, or In flight describes work you cannot see, the last session ended abruptly: find its chat (below) before guessing.
 5. Reply to the first message:
    - Greeting or "where were we": three lines (phase, last done, next action and anything in flight), plus a short Discrepancies list with numbered questions. Then wait for a go.

@@ -71,6 +71,12 @@ That's it. The rest is optional.
 - Setup adds guards: `.gitignore` rules for secret files, rules that stop Claude Code reading them, ignore files for Cursor and Gemini, and a check that scans for leaked keys before every push.
 - If a key ever ends up in a chat or a commit, the agent tells you to replace it right away.
 
+## Always the latest version
+
+Each time it runs, the skill checks this repository and updates itself first, so changes reach you without reinstalling. It never overwrites files you edited yourself, keeps a backup, and stays quiet when you're offline.
+
+Run it in a project you started with an older version and it brings that project forward at a safe point: mid-setup it upgrades the docs and continues where you were; mid-build it finishes the current change first; it never touches your code or changes your plan, and asks before changing your docs. To turn auto-update off, set `IGNITION_SKIP_UPDATE=1`, or add an empty `.no-auto-update` file to the skill's folder.
+
 ## Your project's docs
 
 Everything you decide is written into a few plain Markdown files, and the agent keeps them current and tidy:
@@ -146,11 +152,11 @@ Fork this repo and edit:
 skills/ignition-sequence-start/
 ├── SKILL.md         entry point: picks what to do from your repo and your words
 ├── references/      guides loaded only when needed: setup, build loop, continuity,
-│                    security, parallel work, and one track per kind of project
+│                    security, parallel work, upgrades, and one track per kind of project
 │                    (frontend, backend, ML, hardware, other)
 ├── assets/          templates copied into your project, plus prompts
 └── scripts/         scaffold.py (creates the docs), check.py (health and secret scan),
-                     sessions.py (finds earlier chats for a folder)
+                     sessions.py (finds earlier chats), update.py (keeps the skill current)
 ```
 
 </details>

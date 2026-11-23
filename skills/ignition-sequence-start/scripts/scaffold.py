@@ -24,7 +24,7 @@ Always:   AGENTS.md, docs/product.md, docs/progress.md, and .gitignore if there 
 
 Template lines ending in <!-- if:design --> or <!-- if:architecture --> are kept only when that
 doc is created, so AGENTS.md and progress.md never point at files that do not exist.
-{{PROJECT_NAME}} (with --name) and {{DATE}} are filled in; the agent fills the other placeholders.
+{{PROJECT_NAME}} (with --name), {{DATE}} and {{SKILL_VERSION}} are filled in; the agent fills the rest.
 Python 3.8+ standard library only.
 """
 
@@ -164,7 +164,10 @@ def main():
     if args.parallel:
         files += PARALLEL
 
-    replacements = {"{{DATE}}": datetime.date.today().isoformat()}
+    skill_md = (TEMPLATES.parent.parent / "SKILL.md").read_text(encoding="utf-8")
+    version = re.search(r'^\s*version:\s*"?([^"\n]+)"?', skill_md, re.M)
+    replacements = {"{{DATE}}": datetime.date.today().isoformat(),
+                    "{{SKILL_VERSION}}": version.group(1) if version else "unknown"}
     if args.name:
         replacements["{{PROJECT_NAME}}"] = args.name
 

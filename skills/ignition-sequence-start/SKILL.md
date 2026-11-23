@@ -1,11 +1,12 @@
 ---
 name: ignition-sequence-start
-description: Takes a new project from idea to shipped MVP with any coding agent - frontends, backends or both, ML models, hardware, CLIs. Asks only what matters, records decisions in a lean AGENTS.md plus docs/, and builds in small verified milestones with security, cleanup and refactoring built in. Keeps work resumable across chats, agents, accounts and machines, including finding the previous chat. Plain words for beginners, terse for pros. Use when the user says "ignition sequence start", starts a new project, says continue or asks for status, switches agent or account, adds a frontend, backend or features, needs API keys or accounts set up, wants to ship, or wants parallel agents.
+description: Takes a new project from idea to shipped MVP with any coding agent - frontends, backends or both, ML models, hardware, CLIs. Asks only what matters, records decisions in a lean AGENTS.md plus docs/, and builds in small verified milestones with security, cleanup and refactoring built in. Keeps work resumable across chats, agents, accounts and machines, including finding the previous chat, and keeps itself and projects set up with older versions up to date. Plain words for beginners, terse for pros. Use when the user says "ignition sequence start", starts a new project, says continue or asks for status, switches agent or account, adds a frontend, backend or features, needs API keys or accounts set up, wants to ship, or wants parallel agents.
 license: MIT
 compatibility: Any coding agent that can read files and run shell commands. Python 3.8+ is optional, for the scripts.
 metadata:
   author: Justin Liao
-  version: "0.3.0"
+  version: "0.4.0"
+  repository: imjustinliao/Skill-Ignition-Sequence-Start
 ---
 
 # Ignition Sequence Start
@@ -13,6 +14,8 @@ metadata:
 Takes a new idea from an empty folder to a shipped MVP with any coding agent: a website or app, a backend or API, both, a trained model, firmware and a device, a CLI or a library. The owner talks in plain language; the agent asks only what it needs, recommends a default for the rest, builds in small verified steps, and keeps the project in the repo so any agent, account or machine can carry on.
 
 `<skill>` means this skill's folder. Reference paths are relative to it; run scripts from the project folder as `python3 <skill>/scripts/<name>.py`.
+
+**Stay current.** Before anything else in a session, run `python3 <skill>/scripts/update.py --quiet`. It is silent when the skill is up to date or offline. If it reports an update, re-read this file before continuing; the project may then need an upgrade too (below).
 
 ## Principles
 
@@ -30,7 +33,7 @@ Drawn from how leading agentic-coding practitioners and teams work (sources in t
 
 ## Route the request
 
-Whenever project docs exist, run the arrival check first (`references/continuity.md` › Arriving) and lead with its short status. Then:
+Whenever project docs exist, run the arrival check first (`references/continuity.md` › Arriving), including the project's version, and lead with its short status. Then:
 
 | Situation or phrase | Do | Read |
 |---------------------|----|------|
@@ -40,6 +43,7 @@ Whenever project docs exist, run the arrival check first (`references/continuity
 | Docs exist; new chat, agent or account; "continue", "where were we" | **Resume** | `references/continuity.md` › Arriving |
 | "Continue from my other chat", or `progress.md` doesn't explain the latest work | **Find the last chat** | `references/continuity.md` › Finding the last chat |
 | "Handoff", switching agent, account or machine, context running low | **Hand off** | `references/continuity.md` › Leaving |
+| The project was set up with an older version of this skill (`check.py` warns) | **Upgrade the project** at a safe point for its stage | `references/upgrade.md` |
 | "Status", a list of fixes, "new feature", "add backend", "change …", "clean up", "keep going" | **Build loop** | `references/workflow.md` (matching section) |
 | "Ship it", deploy, publish, launch | **Ship** | `references/workflow.md` › Shipping, then the track file |
 | API keys, accounts, logins, billing, anything secret | **Handle access safely** | `references/security.md` |
@@ -91,8 +95,9 @@ Check what this agent can do rather than assume: plan mode for plans; subagents 
 
 Run them; no need to read them first. Python 3.8+ standard library only.
 
+- `update.py [--check]`: brings the skill itself up to date from its repository (git pull for clones, a safe file update for copies, the plugin manager for plugins). Never overwrites files you edited; off with `IGNITION_SKIP_UPDATE=1`.
 - `scaffold.py . --name "<Name>" [--with design,architecture] [--agents claude,cursor,gemini,aider] [--parallel] [--dry-run]`: creates the docs and secret guards and a git pre-push hook that blocks leaked secrets. Never overwrites.
-- `check.py`: health check: unfinished setup, docs vs git, tracked secrets and key patterns, stray Markdown files, oversized docs. Run on arrival and before a handoff.
+- `check.py`: health check: project version vs the skill, unfinished setup, docs vs git, tracked secrets and key patterns, stray Markdown files, oversized docs. Run on arrival and before a handoff.
 - `sessions.py [--show N]`: finds earlier chats for this folder in Claude Code, Codex, Gemini CLI and Copilot CLI (any account on this machine), with resume commands; `--show` prints the last messages of the most recent earlier chat, redacted.
 
 Without Python, copy `assets/templates/` by hand (`gitignore` → `.gitignore`, `claude-settings.json` → `.claude/settings.json`) and find chats as `references/continuity.md` describes.

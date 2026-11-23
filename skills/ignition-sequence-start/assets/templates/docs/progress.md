@@ -1,6 +1,6 @@
 # Progress
 
-<!-- ignition-sequence-start: 0.3.0 -->
+<!-- ignition-sequence-start: {{SKILL_VERSION}} -->
 The handoff note for the next session, agent or account. Keep it short; newest entries first.
 
 ## Now

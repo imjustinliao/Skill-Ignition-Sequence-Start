@@ -27,6 +27,8 @@ SECRET_FILE = re.compile(
     r"(^|/)(\.env(\.[^/]+)?|\.envrc|\.dev\.vars|secrets\.h|credentials\.json"
     r"|[^/]*service-account[^/]*\.json|[^/]+\.(pem|key|p12|pfx|tfstate))$")
 SAMPLE = re.compile(r"(\.|-|_)(example|sample|template)(\.[^/]+)?$")
+SKILL_MD = pathlib.Path(__file__).resolve().parent.parent / "SKILL.md"
+MARKER = re.compile(r"<!-- ignition-sequence-start: ([\w.]+) -->")
 LEGACY = {  # docs from versions before 0.3: where their content belongs now
     "spec.md": "docs/product.md › MVP features",
     "feedback.md": "docs/progress.md › Feedback",
@@ -78,6 +80,7 @@ def check_progress(root, last_commit_date):
         report("FAIL", "no docs/progress.md: the next agent has nothing to resume from")
         return
     text = path.read_text(encoding="utf-8", errors="replace")
+    check_version(text)
     open_items = re.findall(r"^- \[ \] (.+)$", section(text, "Setup"), re.M)
     if open_items:
         report("warn", "setup has %d open item(s), next: %s" % (len(open_items), open_items[0].split(" <!--")[0]))
@@ -90,6 +93,21 @@ def check_progress(root, last_commit_date):
                        "progress.md may be stale" % (last_commit_date, max(dates)))
     elif last_commit_date and not dates and not open_items:
         report("warn", "the session log is empty")
+
+
+def version_tuple(value):
+    return tuple(int(n) for n in re.findall(r"\d+", value)[:3])
+
+
+def check_version(progress_text):
+    skill = re.search(r'^\s*version:\s*"?([^"\n]+)"?', SKILL_MD.read_text(encoding="utf-8"), re.M)
+    if not skill:
+        return
+    marker = MARKER.search(progress_text)
+    project = marker.group(1) if marker else "0.2 or earlier"
+    if not marker or version_tuple(project) < version_tuple(skill.group(1)):
+        report("warn", "project set up with ignition-sequence-start %s; the skill is %s: offer the "
+                       "upgrade (references/upgrade.md)" % (project, skill.group(1)))
 
 
 def check_git(root):
