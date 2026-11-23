@@ -84,7 +84,7 @@ Hard-to-reverse choices need that explicit yes: stack, data model, auth, hosting
 
 Propose milestones in `docs/progress.md` › Milestones:
 
-- **M1 is the thinnest runnable slice**: the app opens, the endpoint answers, the model trains on 100 samples, the LED blinks. Its "done when" includes filling the smoke, build, test and run commands in `AGENTS.md`.
+- **M1 is the thinnest runnable slice**: the app opens, the endpoint answers, the model trains on 100 samples, the LED blinks. Its "done when" includes filling the smoke, build, test, run and preview commands in `AGENTS.md`, and the owner opening the live preview themselves (in the harness's preview pane, if it has one).
 - Each milestone: feature IDs, a "done when" check the agent can run, and what the owner will see.
 - **The last MVP milestone is Ship** (`workflow.md` › Shipping).
 - Mark milestones that could run in parallel once a base exists (`parallel.md`). The default is one agent.

@@ -5,7 +5,7 @@ license: MIT
 compatibility: Any coding agent that can read files and run shell commands. Python 3.8+ is optional, for the scripts.
 metadata:
   author: Justin Liao
-  version: "0.4.1"
+  version: "0.5.0"
   repository: imjustinliao/Skill-Ignition-Sequence-Start
 ---
 
@@ -78,7 +78,7 @@ Messages stay short: about 150 words and at most three numbered questions, each 
 
 ## Building
 
-Each milestone: plan with a runnable "done when" check, build in small focused changes, verify like a user and show the evidence, commit per the approval mode, then a fresh-eyes review, a tidy and refactor pass, and an update to `docs/progress.md`. Security always; performance and scale as far as the goals need. Details: `references/workflow.md`.
+Each milestone: plan with a runnable "done when" check, build in small focused changes while the owner watches a live preview, verify like a user and show the evidence, commit per the approval mode, then a fresh-eyes review, a tidy and refactor pass, and an update to `docs/progress.md`. Security always; performance and scale as far as the goals need. Details: `references/workflow.md`.
 
 ## Working with the owner
 

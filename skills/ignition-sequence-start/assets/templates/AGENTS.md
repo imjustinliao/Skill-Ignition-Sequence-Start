@@ -60,6 +60,9 @@ If two attempts at the same fix fail, stop, re-plan, and tell the owner.
 - Build: `{{BUILD_COMMAND}}`
 - Test: `{{TEST_COMMAND}}`
 - Run it: {{RUN_CHECK}} <!-- e.g. "open it in the browser at phone and desktop width, click through the main flow" -->
+- Live preview: {{PREVIEW}} <!-- e.g. "npm run dev → http://localhost:3000, phone: the Network URL it prints". Other projects: the simulator or Expo Go, the API docs page, the demo app, the serial monitor -->
+
+While building, keep the live preview running and give the owner its link, so they watch every change as it lands; after each change, say what to look at. List it under In flight; stop it when the session ends.
 
 Done means checked, not assumed: show the command and its result, or a screenshot. Never edit or delete a test to make it pass. What only a person or a real device can check goes under Blockers, with exact steps.
 

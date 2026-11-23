@@ -24,7 +24,7 @@ After the plan is approved, every milestone and every review round runs the same
 
 1. **Re-read** `docs/progress.md` and the milestone's feature IDs.
 2. **Plan** in a few lines: files, risks, and the "done when" check. A new milestone needs the owner's approval; inside an approved one, proceed.
-3. **Build** in small, focused, commit-sized changes. Nothing unrelated. Keep `progress.md` › Now current as you go (`continuity.md` › Leaving).
+3. **Build** in small, focused, commit-sized changes. Nothing unrelated. Keep the owner's live preview running (`AGENTS.md` › Verify) so they see each change as it lands, and keep `progress.md` › Now current as you go (`continuity.md` › Leaving).
 4. **Verify** (gate below).
 5. **Present** the result. In `ask` mode, stop for the owner after each change; in the other modes keep going and stop at milestone end, or sooner when a decision is the owner's.
 6. **Commit** per the approval mode.
@@ -46,7 +46,7 @@ Done means all of this, checked by the agent itself:
 
 ## Presenting results
 
-Short and checkable: what changed per feature or feedback ID (done, partly done and what's missing, not done and why); how it was verified and what could not be; screenshots or output to look at; then the question the approval mode asks. Plain words for beginners.
+Short and checkable, with the preview link and what to look at: what changed per feature or feedback ID (done, partly done and what's missing, not done and why); how it was verified and what could not be; screenshots or output to look at; then the question the approval mode asks. Plain words for beginners.
 
 ## Quality bar
 

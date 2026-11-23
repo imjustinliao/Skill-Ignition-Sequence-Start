@@ -31,7 +31,7 @@ It asks about four short things:
 3. Your OK on the design and the architecture it proposes
 4. Your OK on the plan
 
-Answer in a few words, paste notes you already have, or say **"you suggest"**. Nothing is built until you approve the plan.
+Answer in a few words, paste notes you already have, or say **"you suggest"**. Nothing is built until you approve the plan. Once building starts, you get a live preview link (for a website, something like `http://localhost:3000`) and watch each change appear as it's made.
 
 In a hurry? Type `ignition sequence start, express` and describe only the idea and the must-have features.
 
