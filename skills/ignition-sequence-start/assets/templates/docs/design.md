@@ -1,25 +1,30 @@
 # Design
 
-> Source: owner, {{DATE}}. **Vision** and **Requirements** keep the owner's wording. **Design direction** is the approved, current truth: rewrite it in place when it changes (git keeps the history) instead of appending dated notes.
+> **Status: proposed** ({{DATE}}). Becomes "approved" with the date once the owner agrees. After that it is current truth: rewrite it in place when it changes (git keeps the history).
 
-## Vision
+## Feel
 
-<!-- The owner's brief: the feeling, the principles, the name of the style if it has one. -->
+<!-- Three words for the personality, and what it must never feel like. -->
+
+## System
+
+- **Platform and components**:
+- **Theme**: light / dark / both (follows the system)
+- **Color tokens**: background, foreground, primary (brand), muted, border, destructive
+- **Type**: typeface(s) and scale
+- **Spacing and radius**:
+- **Motion**: durations, easing, reduced-motion behavior
+- **Accessibility**: text contrast ≥ 4.5:1, visible focus, targets ≥ 44 px, labels on every control
+
+## Patterns
+
+<!-- Navigation model, layouts, key screens, and the states every screen handles: empty, loading, error, success. -->
 
 ## Requirements
 
-### DES-01: {{Requirement title}}
+### DES-01: {{Requirement}}
 - [ ] {{Acceptance item}}
 
-## Design direction
+## References
 
-<!-- Filled after research and approval: principles, layout, color and theme, typography, motion, components, accessibility. -->
-
-## Pending from owner
-
-<!-- Assets, logos, fonts, copy still to come. -->
-
-## Ambiguities
-
-| ID | Req | Wording | Possible readings |
-|----|-----|---------|-------------------|
+<!-- Images in references/ (inspiration only: never shipped, never copied). Patterns several references share come first, then one line per file: what to borrow, what to avoid. -->

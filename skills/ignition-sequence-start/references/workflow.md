@@ -1,129 +1,159 @@
-# The build loop
+# Building, reviewing and shipping
 
-After the plan is approved, every milestone and every review round goes through the same loop. It is slow in the right places (before code is written, before work is called done) and fast everywhere else.
+After the plan is approved, every milestone and every review round runs the same loop: slow where mistakes are expensive (before code, before calling it done, before anything public), fast everywhere else.
 
 ## Contents
 
 - The loop
 - Verification gate
 - Presenting results
+- Quality bar
+- Tidy and refactor pass
 - Feedback rounds
-- Commits and approval modes
+- Status
 - Sign-off and drift
-- Revising earlier decisions
+- Revising
 - New scope
+- Adding a part
+- Approval modes and commits
 - Away mode
+- Shipping
 - Versioning
 
 ## The loop
 
-1. **Re-read** `docs/progress.md` and the milestone's requirement IDs.
-2. **Plan the milestone** in a few lines (what, files, risks). For a new milestone, get approval; inside an approved milestone, proceed.
-3. **Implement** in focused changes. Nothing unrelated.
+1. **Re-read** `docs/progress.md` and the milestone's feature IDs.
+2. **Plan** in a few lines: files, risks, and the "done when" check. A new milestone needs the owner's approval; inside an approved one, proceed.
+3. **Build** in small, focused, commit-sized changes. Nothing unrelated. Keep `progress.md` › Now current as you go (`continuity.md` › Leaving).
 4. **Verify** (gate below).
-5. **Present** results and **stop** for feedback.
+5. **Present** the result. In `ask` mode, stop for the owner after each change; in the other modes keep going and stop at milestone end, or sooner when a decision is the owner's.
 6. **Commit** per the approval mode.
-7. **Update** `docs/progress.md` (and `docs/feedback.md`, `docs/design.md` if they changed).
+7. **Milestone end**: fresh-eyes review, tidy pass, sign-off, update `progress.md`.
+
+Stop and tell the owner when: two attempts at the same fix have failed (re-plan instead of patching); a decision falls outside what was approved; the check cannot run here.
 
 ## Verification gate
 
-"Done" means all of these, checked by the agent itself, not left to the owner:
+Done means all of this, checked by the agent itself:
 
-- It builds, with no new warnings.
-- The tests pass. Read the result line (for example `TEST SUCCEEDED`, `0 failed`) instead of assuming. Never chain a push after the test command; look first.
-- It was run and looked at: screenshots of every screen touched (both themes if there are two), CLI output, API responses, whatever the product shows. Compare with `docs/design.md` and `references/`.
-- Interactions were exercised, not just rendered (tap, swipe, drag, type), because gesture and focus bugs only show under input.
-- Anything that cannot be checked here (real hardware, sensors, payments, third-party accounts, production data) is listed as unverified and added to Blockers.
-
-If something fails, fix it or report it plainly with the output. Never present unverified work as done.
+- The "done when" check was decided before building, and it passes.
+- It builds with no new warnings, and the tests pass. Read the result line; never chain a push blindly after a test command.
+- **It was used like a user would**: UI driven in a browser or simulator at phone and desktop widths, in each theme the design uses, interactions exercised (tap, type, drag, keyboard). APIs called for real, including failure and permission cases. Models evaluated against the baseline. Firmware compiled and simulated where possible. CLIs run with real arguments.
+- **Evidence** in the report: the command and its result, screenshots, sample output.
+- **Tests are never edited or deleted to make them pass.** Test hardest where bugs are costly and quiet: auth, payments, data loss, permissions.
+- **Fresh eyes before a milestone is done**: a review by a subagent that did not write the code (or the harness's review command), against the feature IDs and the quality bar.
+- What cannot be checked here (real hardware, payments, third-party accounts, how it feels) goes under Blockers with exact steps for the owner.
 
 ## Presenting results
 
-Keep it short and checkable:
+Short and checkable: what changed per feature or feedback ID (done, partly done and what's missing, not done and why); how it was verified and what could not be; screenshots or output to look at; then the question the approval mode asks. Plain words for beginners.
 
-- What changed, per feedback ID or requirement ID: done, partly done (what's missing), or not done (why).
-- Verification: build, tests, what was looked at, what could not be checked.
-- Screenshots or output for what the owner should look at.
-- Then the question the approval mode requires, or "pushed as <version>".
+## Quality bar
+
+The goals in `docs/product.md` set how far to go beyond the baseline:
+
+| Concern | Always, even for an MVP | When the goals demand it |
+|---------|-------------------------|--------------------------|
+| Security | Secrets rules; input validated at boundaries; authorization checked on every data access; least privilege; approved dependencies only | Threat model, audit logs, external review |
+| Performance | No obvious waste: N+1 queries, unbounded lists, giant bundles, blocking the UI thread | Measured budgets (p95 latency, page load), profiling |
+| Scale | Stateless servers, indexes on queried fields, pagination, migrations | Caching, queues, replicas: after measuring |
+| Cost and efficiency | Free tiers, scale to zero, spend limits | Reserved capacity, tuning |
+
+When a goal forces a trade-off, explain it in one line and let the owner choose.
+
+## Tidy and refactor pass
+
+At every milestone end, and whenever the owner asks:
+
+- **Duplication**: the same logic in three places gets extracted; near-identical components become one.
+- **Dead weight**: unused files, assets, dependencies, feature flags, debug leftovers, temporary docs, stale `references/` images.
+- **Docs**: current truth rewritten in place; `AGENTS.md` under ~100 lines and `progress.md` under ~200 (done feedback rows out, ~15 decisions, ~10 log lines); no extra Markdown files (`check.py` flags them).
+- **Rules**: refactors change no behavior and go in their own commit, with tests green before and after. Deletions are listed in the milestone summary and done after the owner's OK (git keeps history). Mid-milestone, don't refactor code you aren't otherwise touching: note it for this pass.
 
 ## Feedback rounds
 
-Review feedback often arrives as many requests in one message, with more added while work is underway. To make sure nothing is lost:
-
-1. Split the message into items and add each to `docs/feedback.md` with an ID (`FB-012`), in the owner's words, before starting.
-2. Mid-work additions get their own IDs; finish or park the current item cleanly first.
+1. Split the owner's message into items and add each to `progress.md` › Feedback with an ID (`FB-012`), in their words, before starting.
+2. Items added mid-work get their own IDs; finish or park the current one cleanly first.
 3. Work through them; when two conflict, ask.
-4. Report per ID. Mark done items with the commit.
+4. Report per ID; mark done items with the commit.
 
-Numbered lists from the owner ("1. … 2. …") and screenshots labelled by item number make this easier; suggest it once, not every round.
-
-## Commits and approval modes
-
-The mode lives in `AGENTS.md` › Git. Only the owner changes it.
-
-- **`ask`**: after verification, summarize and ask: improve further, commit only, or commit and push. Wait.
-- **`commit-on-green`**: after the gate passes, commit and push, then report. Typical once the owner says "push once done" or "you can push without asking". Record the switch as a decision with the date.
-
-Every commit, either mode: stage only project paths (never machine-specific files); check `git diff --cached` for secrets and local settings; one logical change per commit; never force-push or rewrite published history.
-
-## Sign-off and drift
-
-- **Sign off each milestone** against its requirement IDs before calling it done: every acceptance item met, met in the owner's newer form, or listed as a gap. Read-only audit subagents, one per milestone, make this quick.
-- **Review rounds drift.** After several rounds of ad-hoc fixes, the spec falls behind what the owner now wants and requirements quietly slip. Every few rounds, or when the owner asks "where are we?", give a short status: what is signed off, what changed since, what was skipped, which open questions are still unanswered. Then fold the owner's newer decisions back into `docs/spec.md` and `docs/design.md`.
-- **Re-ask unanswered questions** at these checkpoints instead of letting them sit in Blockers indefinitely.
-
-A status check ("status", "where are we") answers in this shape:
+## Status
 
 ```text
 Phase and milestone: …
-Signed off: …   In progress: …   Not started: …
-Since the last sign-off: N feedback items done, N open (IDs)
+Done: …   In progress: …   Not started: …
+Feedback: N done, N open (IDs)
 Skipped or deferred: …
 Waiting on you: numbered questions
 ```
 
-## Revising earlier decisions
+## Sign-off and drift
 
-Anything the owner gave during setup can change later: the goal, a requirement, the design, the plan, the conventions. Change it where it lives, so every agent sees the new version:
+- Sign off each milestone against its feature IDs: every acceptance item met, met in the owner's newer form, or listed as a gap.
+- After several rounds of ad-hoc fixes the docs fall behind what the owner now wants. Every few rounds, or on "status", fold their newer decisions back into `docs/product.md` and `docs/design.md`, and re-ask unanswered questions instead of letting them sit in Blockers.
+
+## Revising
+
+Anything from setup can change. Change it where it lives:
 
 | The owner changes | Update | Then |
 |-------------------|--------|------|
-| The goal, users, non-goals | `docs/product.md` | Check whether the spec or plan still fit; say so if not. |
-| A requirement (reword, remove, reprioritize) | `docs/spec.md`, in place, dated | Re-check the affected milestones' acceptance items. |
-| The look or feel | `docs/design.md` › Design direction, rewritten in place | List screens already built that no longer match, as feedback items or a milestone. |
-| The plan (order, scope, a milestone) | `docs/progress.md` › Milestones | Get approval for the new plan before building on it. |
-| How agents work (approval mode, commit format, branching, commands) | `AGENTS.md` | Apply from the next action on. |
+| Goal, users, targets | `docs/product.md` | Check the plan and architecture still fit; say so if not |
+| A feature | `docs/product.md`, in place, dated | Re-check the affected milestones |
+| Look and feel | `docs/design.md`, rewritten in place | List built screens that no longer match, as feedback items |
+| Architecture or stack | `docs/architecture.md` | Explain cost and rework; needs approval |
+| The plan | `progress.md` › Milestones | Approval before building on it |
+| How agents work | `AGENTS.md` | Applies from the next action |
 
-Steps: show the current wording, make the change in the owner's words, summarize what changed and what it affects in two or three lines, and record a dated decision. A change that adds work or reorders the plan needs the owner's yes before code; a wording fix does not.
-
-**The owner edits the docs directly.** That is welcome. On arrival, notice doc changes since the last session (`git log` or `git diff` on `docs/` and `AGENTS.md`), mention them in the status line, and follow the new version.
+Show the current wording, make the change in the owner's words, summarize what it affects in two or three lines, and log a dated decision. A change that adds work or reorders the plan needs a yes before code. When the owner edits docs by hand, their version wins: mention it on arrival and follow it.
 
 ## New scope
 
-When the owner brings a new batch of features or a direction change after the plan:
+1. Capture the features in `docs/product.md` with new IDs (setup rules: faithful wording, open questions separate).
+2. Update `docs/design.md` or `docs/architecture.md` if affected; research only what blocks it.
+3. Propose milestones, including rework of finished ones, and get approval.
 
-1. Capture the requirements in `docs/spec.md` with new IDs (step 3 rules: faithful wording, ambiguities separate), dated.
-2. If the batch has design implications, update `docs/design.md` (step 6) and research only what blocks it (step 7).
-3. Propose new milestones (step 8), including any rework of finished ones, and get approval.
-4. Update the milestone table and Next action in `docs/progress.md`.
+New scope never goes straight from chat into code: unwritten requirements are the ones that get lost.
 
-New scope never goes straight from a chat message into code: unwritten requirements are the ones that get lost.
+## Adding a part
+
+When the owner adds a part they skipped ("now build the backend too", "add a mobile app"):
+
+1. Run that part's direction step from its track file (`intake.md` › 3). Create its doc if missing (`python3 <skill>/scripts/scaffold.py . --with architecture` or `--with design`) and add its rows to `AGENTS.md` › Docs and the plan.
+2. The existing contract in `docs/architecture.md` › Interfaces is the starting point: the new part implements it, and mocks are replaced one endpoint at a time behind the same interface.
+3. Update `AGENTS.md` › Built here, propose milestones, get approval.
+
+If someone else was building that part, agree with the owner who owns the contract from now on.
+
+## Approval modes and commits
+
+Set in `AGENTS.md` › Git; only the owner changes it (log the change as a decision):
+
+- **`auto-commit`** (default): commit after each passing check; push at milestone end after the owner signs off. Frequent local commits also mean a crashed session loses almost nothing.
+- **`ask`**: after a verified change, ask: improve further, commit, or commit and push?
+- **`auto-push`**: commit and push after each passing check. Never on a failed or unfinished check.
+- **`none`**: no git. No commits; every deletion is permanent, so ask first. Offer git again at milestone ends.
+
+Every commit: stage only project paths, check `git diff --cached` for secrets and machine-specific files, one logical change, never force-push or rewrite published history. The pre-push hook runs `check.py --secrets`; without it, run `python3 <skill>/scripts/check.py` before pushing. Bypass the hook (`--no-verify`) only when the owner confirms a false alarm.
 
 ## Away mode
 
-When the owner says they will be away and work should continue:
+- Agree the boundary first: which milestones or feedback IDs, and the commit mode. Log it as a dated decision.
+- Stay inside it. Never cross a gate that wasn't granted: a new milestone, a dependency, money, deletion, anything public.
+- Use recorded defaults for small questions; queue real ones under Blockers instead of waiting.
+- Leave a report readable in two minutes: done per ID, verified how, waiting on the owner.
 
-- Agree the boundary first: which milestones or feedback IDs, and whether `commit-on-green` applies. Record it as a dated decision.
-- Work only inside that boundary. Never cross an approval gate that was not granted (new milestone, dependency, stack change, deletion, anything public or irreversible).
-- Choose recorded defaults for small ambiguities; queue real questions in `docs/progress.md` › Blockers instead of waiting.
-- Leave a handoff note and a report the owner can read in two minutes: what was done (per ID), what was verified, what is waiting on them.
+## Shipping
+
+1. Run the track file's Ship checklist.
+2. Always: a README that shows the product off (one-line pitch, screenshot or GIF, live link or install command, quickstart, stack, license); `check.py` clean; no secrets anywhere; production settings in the host, not in code.
+3. **The owner approves every public step**: production deploy, publishing a package, making the repo public, a launch post.
+4. After launch: error tracking and an uptime check where it applies, a known rollback path, and first users' feedback into `progress.md` › Feedback. Phase becomes Live.
 
 ## Versioning
 
-With the `MAJOR.MINOR.PATCH - What changed` format:
+With the default `MAJOR.MINOR.PATCH - What changed` commits:
 
-- **PATCH**: fixes, visual refinements, small improvements.
-- **MINOR**: a new feature, screen, or capability (reset patch to 0). Long refinement phases tend to drift into "everything is a patch"; a new screen or behavior the user can see is a minor bump.
-- **MAJOR**: a product generation, breaking change, or release milestone.
-- Each commit gets the next unused version after `git log`. Parallel sessions use their reserved ranges.
-- A commit version is not an app or package release version; do not change those unless the owner asks.
+- **PATCH**: fixes, refinements, small improvements. **MINOR**: a new feature, screen or capability (reset patch). **MAJOR**: a release milestone or breaking change. A new screen or behavior users can see is a minor bump, even in a long refinement phase.
+- Each commit takes the next unused version from `git log`. Parallel sessions use reserved ranges.
+- A commit version is not the app's or package's release version; change those only when the owner asks.

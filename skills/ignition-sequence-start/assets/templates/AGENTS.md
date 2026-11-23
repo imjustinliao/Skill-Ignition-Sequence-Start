@@ -1,112 +1,96 @@
 # AGENTS.md
 
-Shared instructions for every coding agent working on {{PROJECT_NAME}}. Keep this file short; details live in `docs/`.
+How every coding agent works on {{PROJECT_NAME}}. This file is a map: rules live here, knowledge lives in `docs/`. Keep it under ~100 lines; add a rule only after a mistake repeats.
 
-## Project snapshot
+## Project
 
-- **{{PROJECT_NAME}}**: {{ONE_LINE_DESCRIPTION}}
-- **Scope**: {{SCOPE}} <!-- e.g. "frontend only; the backend is built separately" -->
+- **{{PROJECT_NAME}}**: {{ONE_LINE_PITCH}}
+- **Stakes**: MVP. Working, clean and shipped beats complete. <!-- change to "production" once real users depend on it -->
+- **Built here**: {{PARTS}} <!-- e.g. "frontend and backend", or "frontend only; backend by another team against docs/architecture.md › Interfaces" -->
 - **Stack**: {{STACK}}
-- **Layout**:
-  - `{{SOURCE_DIR}}/`: application source. Only shipping code and assets go here.
-  - `docs/`: spec, progress and feedback; product, design and research when the project has them.
-  - `references/` (if present): screenshots and visual assets for inspiration. Never ship these.
+- **Owner**: {{EXPERIENCE}} <!-- new to coding / some experience / pro: sets how much to explain -->
 
-## Start of every session (every agent)
+## Docs
 
-Do this before the first task, without being asked:
+| File | Holds | Read |
+|------|-------|------|
+| `docs/progress.md` | Now (status, next action, in flight), milestones, feedback, decisions, blockers, session log | First, every session |
+| `docs/product.md` | Pitch, users, goals, MVP features with IDs, what was cut | Before feature work |
+| `docs/design.md` | Feel, design system, patterns, references | Before user-facing work | <!-- if:design -->
+| `docs/architecture.md` | Shape, stack and why, data, interfaces, environments and secret names, deploy | Before system work | <!-- if:architecture -->
 
-1. Read `docs/progress.md`: current status, next action, work in flight, decisions, blockers.
-2. Check `git status` and `git log -5`. If git disagrees with `progress.md`, trust git and correct `progress.md`. If the owner edited the docs since the last session, follow their version.
-3. If this file still has template placeholders (names in double curly braces), setup is unfinished: ask the owner to fill them before building.
-4. Read only what the task needs, from the docs that exist: `docs/spec.md`, `docs/product.md`, `docs/design.md`; `references/README.md` for visual work; `docs/parallel-plan.md` if you are a parallel session.
-5. Orient the owner. For a greeting, "continue" or "where were we": three lines (phase, last done, next action) plus any discrepancies. For a specific task: one line of orientation, then the task.
+Everything goes in one of these: a technical choice and its source in the doc it shapes; why X beat Y in Decisions; notes, plans and summaries folded in, then deleted. No other Markdown files. Design and architecture docs are current truth: rewrite them in place (git keeps history).
+
+## Start of every session
+
+1. Read `docs/progress.md`, then `git status` and `git log -5`. If they disagree, trust git and fix `progress.md`.
+2. If this file still has `{{placeholders}}`, setup is unfinished: finish it before building.
+3. Run the smoke check, if one is set: `{{SMOKE_COMMAND}}`. If it fails, fix or report that first.
+4. "Where were we": three lines (phase, last done, next action), then wait. "Continue": do the approved next action. A specific task: one line of orientation, then the task.
+5. If `progress.md` does not explain the latest commits or work in flight, the last session ended abruptly. Find its chat before guessing: this tool's resume list for this folder, or `scripts/sessions.py` in the ignition-sequence-start skill folder (usually `~/.claude/skills/` or `~/.agents/skills/`) if it is installed.
 
 ## Owner shortcuts
 
-| The owner says | Do |
-|----------------|----|
-| "continue", "go" | Start the approved next action in `docs/progress.md`. "Where were we" gets only the three-line orientation; wait for a go. |
-| "status", "where are we" | Summarize: phase, signed off, in progress, open feedback IDs, skipped items, questions waiting on the owner. |
-| "handoff", "wrap up", "switching agents" | Update `docs/progress.md` (status, next action, in flight, session log), commit finished work if the approval mode allows, and report anything left uncommitted. |
-| A list of changes or fixes | Add each to `docs/feedback.md` with an ID first, then work through them and report per ID. |
-| New features | Add them to `docs/spec.md` (and `docs/design.md` if it exists) with IDs, propose milestones, get approval before building. |
-| "change …", "update …" (goal, a feature, the design, the plan, these rules) | Edit the document where it lives (`docs/product.md`, `docs/spec.md`, `docs/design.md`, `docs/progress.md`, or this file; if that document does not exist yet, offer to create it), summarize what changed and what it affects, and get approval if it adds work or reorders the plan. |
-| "I'll be away", "keep going" | Agree the boundary (which IDs, commit mode), stay inside it, queue questions in Blockers, leave a short report. |
-| "help" | List these shortcuts in plain words: continue, status, handoff, a numbered list of fixes, new feature, change, keep going, help. |
+| Owner says | Do |
+|------------|----|
+| continue, go | The approved next action. |
+| status | Phase, milestone, done / in progress / waiting on the owner, open feedback IDs. |
+| handoff | Update `progress.md` › Now and the session log, commit if allowed, list anything uncommitted. |
+| 1. … 2. … | Add each to `progress.md` › Feedback with an ID, work through them, report per ID. |
+| new feature: … | Add to `docs/product.md` with an ID, propose where it fits in the plan, wait for approval. |
+| add backend (or frontend, an app, …) | Agree the new part's direction and contract with the owner, then plan it like a milestone. |
+| change … | Edit the doc where it lives, say what it affects, get approval if it adds work. |
+| keep going | Agree the boundary first; stay inside it; queue questions under Blockers. |
+| faster / slower | Fewer check-ins and terser updates, or more explanation and smaller steps. |
+| ship it | Run the ship checklist for this project and get approval before anything goes public. |
+| help | List these shortcuts in plain words. |
 
-## Workflow
+## How we build
 
-1. Understand the requirement and inspect the existing code.
-2. Research the relevant technologies and best practices.
-3. Propose a plan with milestones and acceptance criteria (requirement IDs from `docs/spec.md`).
-4. **Stop: get the owner's approval before implementing.**
-5. Implement one approved milestone at a time.
-6. Verify: build, test, and check the result yourself (see Verify).
-7. **Stop: present results (with screenshots or output) and get feedback before the next milestone.**
-8. Follow the Git rules below.
-9. Update `docs/progress.md` before ending the session.
+1. Plan the milestone in a few lines: what, which files, the check that proves it works. New milestones need the owner's approval.
+2. Build in small, focused changes. Simplest thing that works; no speculative layers; nothing unrelated.
+3. Verify (below) and show the evidence.
+4. Commit per the approval mode. In `ask` mode, stop for the owner after each change; otherwise keep going and stop at milestone end or when a decision is the owner's.
+5. Milestone end: tidy pass (below), then update `docs/progress.md`.
 
-## Working principles
-
-- Think before coding. State assumptions; surface contradictions or gaps in the docs instead of guessing.
-- Prefer the simplest maintainable solution. No speculative abstractions or layers "for later".
-- Make focused changes. Do not modify, reformat, or "clean up" unrelated code.
-- Verify against explicit acceptance criteria. Report anything unmet, skipped, or unverified.
-- Use subagents for independent research or reviews when it saves context or time.
-- Match the existing code style and use the platform's current APIs.
-- Feedback items get IDs in `docs/feedback.md`; report each one as done, partly done, or not done.
-
-## Scope
-
-{{SCOPE_RULES}} <!-- e.g. "Use realistic mock data behind clear interfaces where the backend is unavailable. Record backend needs in docs/progress.md › External dependencies." -->
-
-## Do not, without explicit approval
-
-- Change the tech stack, architecture, or deployment target.
-- Add third-party dependencies.
-- Change signing, credentials, identifiers, capabilities, or CI.
-- Delete files or rewrite git history.
+If two attempts at the same fix fail, stop, re-plan, and tell the owner.
 
 ## Verify
 
-```bash
-# Build
-{{BUILD_COMMAND}}
+- Build: `{{BUILD_COMMAND}}`
+- Test: `{{TEST_COMMAND}}`
+- Run it: {{RUN_CHECK}} <!-- e.g. "open it in the browser at phone and desktop width, click through the main flow" -->
 
-# Test
-{{TEST_COMMAND}}
-```
+Done means checked, not assumed: show the command and its result, or a screenshot. Never edit or delete a test to make it pass. What only a person or a real device can check goes under Blockers, with exact steps.
 
-{{VISUAL_CHECK}} <!-- e.g. "Launch the app, screenshot every screen the change touched, compare with docs/design.md and references/." -->
+## Quality bar
 
-Done means: builds with no new warnings, tests pass, and the result was checked by running it. Things only a person or a real device can check go in `docs/progress.md` › Blockers.
+- **Security, always.** Follow the secrets rules below. Validate input at every boundary. Least privilege for keys, tokens and database access.
+- **Performance and scale, as far as the goals need** (`docs/product.md` › Goals). Measure before optimizing.
+- **No duplication.** When the same logic appears a third time, extract it. Refactor in its own commit, tests green before and after.
+
+## Secrets
+
+- Never ask for, read, print or commit secret values. Refer to them by name. Values live in `.env` (gitignored) or the host's secret settings; `.env.example` lists names only.
+- Do not run commands that print secrets (`cat .env`, `printenv`, `env`, `echo $KEY`). To check a key is set, test that it exists, never show it.
+- Keys for paid or private services never go in frontend code: call them from a server.
+- If a secret appears in chat, a log or a commit, tell the owner to revoke and replace it now.
+
+## Ask the owner first
+
+Changing the stack or architecture · a dependency outside the approved stack · anything that costs money · deleting the owner's files (your own scratch files and build output are fine) · deploying or publishing · auth, payments or personal data · CI, signing, credentials · rewriting git history.
 
 ## Git
 
-### Approval mode: **{{APPROVAL_MODE}}**
-
-- `ask`: after each change, summarize what changed and whether verification passed, then ask: **improve further**, **commit only**, or **commit and push**? Wait for the answer.
-- `commit-on-green`: once the verification gate passes, commit and push without asking, then report. Never push on a failed or unfinished gate.
-
-Only the owner changes the mode. In either mode: never force-push, never rewrite published history, never merge to the main branch from a parallel session.
-
-### Commit message
-
-{{COMMIT_FORMAT}}
-
-### Never commit
-
-Secrets, tokens, `.env` files, personal signing or machine-specific settings, build output. Check `git diff --cached` before every commit.
+- **Approval mode: auto-commit.** Commit after each passing check; push at milestone end once the owner signs off. Other modes: `ask` (after each verified change ask: improve further, commit, or commit and push?), `auto-push` (commit and push after each passing check), `none` (no git: no commits, and every deletion is permanent, so ask first). Only the owner changes the mode.
+- **Commits:** `MAJOR.MINOR.PATCH - What changed` (1–15 words, no period; next unused version from `git log`; patch for fixes, minor for a new feature, major for a release). Stage only project files; check `git diff --cached` for secrets first.
+- Before pushing, the skill's `check.py --secrets` runs as a git pre-push hook (if installed). Never bypass it with `--no-verify` unless the owner confirms a false alarm.
+- Never force-push or rewrite published history.
 
 ## Handoff
 
-Another agent or a fresh session may continue from where you stop, with nothing but these files. Before you stop, or when your context is running low:
+Sessions can end without warning (limits, crashes, a switch of agent or account). So after every commit and before any long step, keep `docs/progress.md` › Now current: phase, next action, in flight. Push at milestone end so another machine can continue. Write for a stranger: no "as discussed".
 
-1. Update `docs/progress.md` › Current status: phase, next action, and **in flight** (branch, uncommitted files, half-done steps).
-2. Commit finished work if the approval mode allows; otherwise, or if work is unfinished, list exactly what is uncommitted and why.
-3. Add one line to the session log.
+## Tidy pass (every milestone end)
 
-## Record keeping
-
-`docs/progress.md` is a handoff note, not a diary: current status, milestone changes, decisions (date, decision, why, rejected alternatives), blockers, one short session-log line. Prune it when it grows.
+Remove what is no longer used: files, assets, dependencies, dead code, temporary docs, `references/` images nobody needs. Show the list with the milestone summary; delete once the owner approves (git keeps history). Keep this file under ~100 lines and `progress.md` under ~200 (done feedback rows out, ~15 decisions, ~10 log lines).

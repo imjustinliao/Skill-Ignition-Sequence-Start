@@ -1,6 +1,6 @@
 # Parallel plan
 
-> {{DATE}}. The owner approved building {{MILESTONES}} in parallel sessions, coordinated by the session named **"{{COORDINATOR_NAME}}"**. Every parallel session follows this file. The coordinator merges each branch into `{{MAIN_BRANCH}}`, wires the pieces together, and runs a review pass with the owner per milestone.
+> {{DATE}}. The owner approved building {{MILESTONES}} in parallel sessions, coordinated by the session named **"{{COORDINATOR_NAME}}"**. Every parallel session follows this file. The coordinator merges each branch into `{{MAIN_BRANCH}}`, wires the pieces together, and runs a review pass with the owner per milestone. This file and `docs/milestones/` are temporary: the coordinator deletes them after the last merge (git keeps them).
 
 ## Base
 
@@ -16,7 +16,7 @@ Parallel work starts only after the base is on `{{MAIN_BRANCH}}` at `{{BASE_VERS
 
 | Milestone | Branch | Versions | Worktree | Isolated resources |
 |-----------|--------|----------|----------|--------------------|
-| {{M_A}} | `milestone/{{m-a-slug}}` | `{{0.2.x}}` | `../{{repo}}-{{m-a}}` | {{port / simulator / build cache / database}} |
+| {{M_A}} | `milestone/{{m-a-slug}}` | `{{0.N.x}}` | `../{{repo}}-{{m-a}}` | {{port / simulator / build cache / database}} |
 
 - One worktree and one branch per session: `git worktree add ../{{repo}}-<m> -b milestone/<slug> origin/{{MAIN_BRANCH}}`. If the agent already runs in its own worktree, `git switch -c milestone/<slug> origin/{{MAIN_BRANCH}}`.
 - Anything two sessions could fight over gets one per session: dev-server ports, simulators or emulators, build caches, test databases, `.env` copies.
@@ -47,7 +47,8 @@ Frozen interfaces every session codes against. Changes go through the coordinato
 ## Quality bar (every session)
 
 - Builds with no new warnings; tests pass; the session checked its own result (screenshots or output) before reporting.
-- Defaults chosen for open ambiguities are recorded in the report, not in `docs/spec.md`.
+- Defaults chosen for open questions are recorded in the report, not in `docs/product.md`.
+- No secrets in code, logs or the report; each session uses its own `.env` copy.
 
 ## Finish and report back
 

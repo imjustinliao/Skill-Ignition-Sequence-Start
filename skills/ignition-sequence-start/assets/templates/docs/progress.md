@@ -1,51 +1,46 @@
 # Progress
 
-<!-- ignition-sequence-start: 0.2.3 -->
-Newest entries first. This is the handoff note for the next session or agent: keep it short. Replace the example comments when filling a field.
+<!-- ignition-sequence-start: 0.3.0 -->
+The handoff note for the next session, agent or account. Keep it short; newest entries first.
 
-## Current status
+## Now
 
-- **Phase**: Intake <!-- Intake · Planning · Building · Refining · Paused -->
-- **Active milestone**: none
+- **Phase**: Setup <!-- Setup · Building · Shipping · Live · Paused -->
+- **Milestone**: none
 - **Next action**: {{NEXT_ACTION}}
-- **In flight**: none <!-- branch, uncommitted files, half-done steps -->
+- **In flight**: none <!-- branch, uncommitted files, half-done step, running jobs -->
 
-## Intake
+## Setup
 
-Remove this section once every step is done.
+Remove this section once every item is done or skipped (`- [~] skipped`).
 
-- [ ] 0. Inspect the repo and agree the setup
-- [ ] 1. Workflow and rules (`AGENTS.md`)
-- [ ] 2. Product goal (`docs/product.md`)
-- [ ] 3. Specification (`docs/spec.md`), ambiguities answered
-- [ ] 4. Conventions: git, approval mode, scope, build and test commands
-- [ ] 5. First commit
-- [ ] 6. Design and references (`docs/design.md`, `references/`)
-- [ ] 7. Research (`docs/research.md`)
-- [ ] 8. Milestone plan approved
+- [ ] Folder and version history
+- [ ] Goal, users and the parts to build
+- [ ] MVP features
+- [ ] Design direction <!-- if:design -->
+- [ ] Architecture <!-- if:architecture -->
+- [ ] Plan approved and first version saved
 
 ## Milestones
 
-| ID | Title | Status | Requirements |
-|----|-------|--------|--------------|
-| M0 | Project and workflow setup | in progress | — |
+| ID | Title | Done when (the check) | Status |
+|----|-------|-----------------------|--------|
 
 Statuses: proposed · approved · in progress · in review · done
 
-### Milestone details
+## Feedback
 
-<!-- Per milestone: scope, acceptance criteria (requirement IDs), how it will be verified. -->
+| ID | Owner's request (short) | Status | Commit |
+|----|-------------------------|--------|--------|
+
+Statuses: open · in progress · done · won't do (why). Remove done rows once the milestone is signed off.
 
 ## Decisions
 
-<!-- - **YYYY-MM-DD** (owner): Decision. Why. Rejected: alternatives. Keep the ~15 most recent; move older ones to docs/archive/. -->
+<!-- - **YYYY-MM-DD** (owner): Decision. Why. Rejected: alternatives. Keep the ~15 most recent. -->
 
-## Blockers and open questions
-
-## External dependencies
-
-<!-- Backend, services, assets, accounts or people this project waits on. Add entries as they are found. -->
+## Blockers and waiting on the owner
 
 ## Session log
 
-<!-- - **YYYY-MM-DD** (agent): version: one line. Keep the last ~10. -->
+<!-- - **YYYY-MM-DD** (agent, tool): one line. Keep the last ~10. -->

@@ -5,13 +5,13 @@
     "url": "https://github.com/imjustinliao"
   },
   "metadata": {
-    "description": "Ignition Sequence Start: set up any project for coding agents with a step-by-step intake, a durable docs system, automatic session handoffs and contract-based parallel agents.",
-    "version": "0.2.3"
+    "description": "Ignition Sequence Start: take a new project from idea to shipped MVP with any coding agent. Short setup, lean docs, verified milestones, secrets kept from the model, and seamless switching between chats, agents and accounts.",
+    "version": "0.3.0"
   },
   "plugins": [
     {
       "name": "ignition-sequence-start",
-      "description": "Project setup, docs system, handoffs, status checks and parallel-agent workflow for any coding agent.",
+      "description": "New-project setup, build loop, security and session continuity for any coding agent: frontend, backend, ML, hardware and more.",
       "source": "./",
       "strict": false,
       "skills": [

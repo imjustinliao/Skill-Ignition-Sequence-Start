@@ -7,7 +7,8 @@ You are the {{M}} session for {{PROJECT_NAME}} ({{one line}}, repo "{{REPO_PATH}
 
 ## Ground rules (owner-approved for this session)
 - Plan and implement {{M}} end to end without stopping for approval. Choose sensible defaults for open questions and record them in your report. Commit to your own branch and push only that branch. Never push to or merge into {{MAIN_BRANCH}}, never force-push, never rewrite history, never touch other branches.
-- Read first: AGENTS.md, docs/parallel-plan.md (required: ownership map, contracts, conflict rules), docs/spec.md, docs/design.md, docs/research.md, and the existing code in {{shared folders}}.
+- Read first: AGENTS.md, docs/parallel-plan.md (required: ownership map, contracts, conflict rules), docs/product.md, docs/architecture.md and docs/design.md where they exist, and the existing code in {{shared folders}}.
+- Secrets: never read, print or commit them; use your own `.env` copy and refer to keys by name.
 - Isolation: `git fetch origin`. If you are in the shared checkout, run `git worktree add "../{{repo}}-{{m}}" -b milestone/{{slug}} origin/{{MAIN_BRANCH}}` and work only there. If you already run in your own worktree, `git switch -c milestone/{{slug}} origin/{{MAIN_BRANCH}}`.
 - Your own resources: {{port / simulator / build cache / database}}. Never use another session's.
 - Use the contracts as they are. Do not edit: {{read-only paths}}.
