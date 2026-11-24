@@ -27,7 +27,12 @@ An upgrade never changes the owner's approval mode, commit format, stack or plan
 
 ## Versions
 
-### 0.5.1
+### 0.6.0
+
+- **New for the owner**: after a usage limit, a crash or a switch of account or agent, "continue" picks up the chat that was cut off (from any account or agent on this machine) instead of starting over.
+- **Migration**: replace `AGENTS.md` › Start of every session with the template's version (the step that looks for an earlier chat every time, before acting on "continue"), keeping the project's smoke command.
+
+### 0.5.0
 
 - **New for the owner**: a live preview link (localhost, or the project's equivalent) stays open while the agent builds, so every change shows up as it lands.
 - **Migration**: add the Live preview line and the paragraph under it to `AGENTS.md` › Verify, filled with the project's preview command and link.

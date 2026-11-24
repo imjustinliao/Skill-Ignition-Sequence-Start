@@ -34,14 +34,14 @@ Write for a stranger: no "as discussed", no references to the chat.
 ## Arriving: the resume check
 
 1. Read `AGENTS.md` (usually loaded automatically), then `docs/progress.md`. Check `git status`, `git log -5` and the current branch.
-2. If this skill is installed, run `python3 <skill>/scripts/check.py` and read its warnings, then `python3 <skill>/scripts/sessions.py`. **Always**, not only when something looks off: a chat cut off by a usage limit leaves nothing in the docs to say so. Read its flags: "newer than docs/progress.md" or "ended at a usage limit" on a chat that is not this one means work was cut off.
+2. If this skill is installed, run `python3 <skill>/scripts/check.py` and read its warnings, then `python3 <skill>/scripts/sessions.py`. **Always**, not only when something looks off: a chat cut off by a usage limit leaves nothing in the docs to say so. It knows which chat is this one, flags earlier chats that ended at a usage limit, an API error, mid-step, or later than `docs/progress.md`, and ends with a "Take over:" line naming the chat to continue.
 3. Checklist:
    - Does git match `progress.md`: last commit, branch, In flight? Does the last commit's content match its message?
    - Placeholders left in `AGENTS.md`, or open Setup items? Offer to finish them before building.
    - Did the owner edit `docs/` or `AGENTS.md` since the last session (`git log -- docs AGENTS.md`)? Mention it and follow their version.
    - Is the approval mode blank? Treat it as `ask`.
    - Is the version marker at the top of `progress.md` older than this skill (or missing)? Offer the upgrade at a safe point for the project's stage (`upgrade.md`).
-4. **Take over the earlier chat when any of these hold**: `sessions.py` flags a chat as newer than `progress.md` or ended at a usage limit; `progress.md` does not explain the latest commits or uncommitted changes; In flight describes work you cannot see; or the owner says they are continuing or switching. Read its tail (`sessions.py --show 20`, below) before answering or guessing, and say which chat you took over. Never start fresh when an unsaved earlier chat exists.
+4. **Take over the earlier chat when any of these hold**: `sessions.py` prints "Take over:"; `progress.md` does not explain the latest commits or uncommitted changes; In flight describes work you cannot see; or the owner says they are continuing or switching. Read its tail (`sessions.py --show 20`: its last messages plus a line per tool call, so the half-done step shows) before answering or guessing. Check its last steps against git (an edit may have landed, a commit may not have), say which chat you took over, and record it in `progress.md` › Now. Never start fresh when an unsaved earlier chat exists.
 5. Reply to the first message:
    - Greeting or "where were we": three lines (phase, last done, next action and anything in flight), plus a short Discrepancies list with numbered questions. Then wait for a go.
    - "Continue" or "go": start the approved next action.
@@ -64,7 +64,7 @@ When the repo does not explain where work stopped, or the owner says "continue f
 | Cursor | the chat history panel; CLI: `agent ls`, `agent resume` |
 | Others | the tool's chat history |
 
-2. **Another tool or account on this machine**: run `python3 <skill>/scripts/sessions.py` in the project folder. It lists this folder's chats from Claude Code (every config folder with a `projects/` folder: `~/.claude*`, nested ones like `~/.claude/spares/*`, `~/.config/claude*`, `CLAUDE_CONFIG_DIR`, plus any in `IGNITION_CLAUDE_DIRS`, so separate accounts are covered), Codex (including compressed transcripts), Gemini CLI and Copilot CLI, newest first, with the resume command for each. `--show 20` prints the newest chat's last messages, redacted.
+2. **Another tool or account on this machine**: run `python3 <skill>/scripts/sessions.py` in the project folder. It lists this folder's chats from Claude Code (every config folder with a `projects/` folder: `~/.claude*`, nested ones like `~/.claude/spares/*`, `~/.config/claude*`, `CLAUDE_CONFIG_DIR`, plus any in `IGNITION_CLAUDE_DIRS`, so separate accounts are covered), Codex (including compressed transcripts), Gemini CLI and Copilot CLI, newest first, with the resume command for each. `--show 20` prints the last messages and tool steps of the chat to take over (or `--session ID`), redacted.
 3. **Use it, don't copy it.** Read only the tail, write what was in progress into `progress.md` › Now in your own words, tell the owner which chat you used, and confirm the next action. Never paste transcript text into the repo.
 4. **Without the script**, check the locations below yourself, or ask the owner to resume in the original tool and say "handoff" there.
 
@@ -103,7 +103,8 @@ Some agents cap instruction files (Codex reads 32 KiB of `AGENTS.md` by default)
 ## Switching accounts
 
 - Same tool, same machine: chats belong to the folder, not the account. Claude Code, Codex and Copilot CLI keep them locally, so after logging in with another account `claude --resume` or `codex resume` usually still finds them.
-- If each account uses its own config folder (`CLAUDE_CONFIG_DIR`, `CODEX_HOME`), the new account won't list the other's chats. `sessions.py` searches every Claude config folder it can find and prints the right resume command (with the `CLAUDE_CONFIG_DIR=` prefix the other account needs). If the other account's folder is somewhere unusual, set `IGNITION_CLAUDE_DIRS=/path/one:/path/two`. It also flags a chat that ended at a usage limit.
+- If each account uses its own config folder (`CLAUDE_CONFIG_DIR`, `CODEX_HOME`), the new account won't list the other's chats. `sessions.py` searches every Claude config folder it can find. If the other account's folder is somewhere unusual, set `IGNITION_CLAUDE_DIRS=/path/one:/path/two`.
+- Usually the new chat just reads the old one's tail and carries on. If the owner would rather reopen the old conversation itself under the new account, `sessions.py --adopt <id>` copies it into this account's folder (the original stays put), then `claude --resume <id>` opens it there. Resuming it under the old account would hit the same limit.
 - **After a usage limit the chat stopped mid-task and `progress.md` is probably behind.** On "continue", find that chat first (`sessions.py --show 20`), finish the interrupted step from it, then bring `progress.md` up to date. Don't ask the owner to explain what was happening; the transcript says.
 - Account-tied things do not move: synced skills and plugins, MCP logins, usage limits. Check the new account has the MCP servers and logins the project needs.
 - A usage limit hitting mid-task is the usual reason to switch, which is why Now must always be current.

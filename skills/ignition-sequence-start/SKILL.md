@@ -5,7 +5,7 @@ license: MIT
 compatibility: Any coding agent that can read files and run shell commands. Python 3.8+ is optional, for the scripts.
 metadata:
   author: Justin Liao
-  version: "0.5.1"
+  version: "0.6.0"
   repository: imjustinliao/Skill-Ignition-Sequence-Start
 ---
 
@@ -98,7 +98,7 @@ Run them; no need to read them first. Python 3.8+ standard library only.
 - `update.py [--check]`: brings the skill itself up to date from its repository (git pull for clones, a safe file update for copies, the plugin manager for plugins). Never overwrites files you edited; off with `IGNITION_SKIP_UPDATE=1`.
 - `scaffold.py . --name "<Name>" [--with design,architecture] [--agents claude,cursor,gemini,aider] [--parallel] [--dry-run]`: creates the docs and secret guards and a git pre-push hook that blocks leaked secrets. Never overwrites.
 - `check.py`: health check: project version vs the skill, unfinished setup, docs vs git, tracked secrets and key patterns, stray Markdown files, oversized docs. Run on arrival and before a handoff.
-- `sessions.py [--show N]`: finds earlier chats for this folder in Claude Code, Codex, Gemini CLI and Copilot CLI (any account on this machine), with resume commands, flagging chats that ended at a usage limit or are newer than `docs/progress.md`; `--show` prints the last messages of the most recent earlier chat, redacted.
+- `sessions.py [--show N] [--adopt ID]`: finds earlier chats for this folder in Claude Code, Codex, Gemini CLI and Copilot CLI (any account on this machine), flags the ones cut off by a usage limit, an error or mid-step, and names the one to take over; `--show` prints its last messages and tool steps, redacted; `--adopt` copies another account's Claude Code chat into this one so `claude --resume` opens it.
 
 Without Python, copy `assets/templates/` by hand (`gitignore` → `.gitignore`, `claude-settings.json` → `.claude/settings.json`) and find chats as `references/continuity.md` describes.
 

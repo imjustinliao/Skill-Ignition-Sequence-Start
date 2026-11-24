@@ -24,10 +24,10 @@ Everything goes in one of these: a technical choice and its source in the doc it
 ## Start of every session
 
 1. Read `docs/progress.md`, then `git status` and `git log -5`. If they disagree, trust git and fix `progress.md`.
-2. If this file still has `{{placeholders}}`, setup is unfinished: finish it before building.
-3. Run the smoke check, if one is set: `{{SMOKE_COMMAND}}`. If it fails, fix or report that first.
-4. "Where were we": three lines (phase, last done, next action), then wait. "Continue": do the approved next action. A specific task: one line of orientation, then the task.
-5. Look for an earlier chat for this folder, in any tool or account, every time you arrive (a usage limit or crash leaves no note). If `scripts/sessions.py` in the ignition-sequence-start skill folder (usually `~/.claude/skills/` or `~/.agents/skills/`) is installed, run it and read its flags; otherwise check this tool's resume list. If a chat is newer than `progress.md`, ended at a limit, or `progress.md` does not explain the latest commits or work in flight, read its tail and continue from it instead of starting fresh. Say which chat you used.
+2. Look for an earlier chat for this folder, in any tool or account, every time (a usage limit or crash leaves no note). Run `scripts/sessions.py` from the ignition-sequence-start skill (in a `skills/` folder under `~/.claude*`, `~/.agents` or this tool's config) if you have it; it ends with a "Take over:" line when a chat was cut off. Without it: this tool's resume list, or for Claude Code the newest `.jsonl` in `~/.claude*/projects/<this folder's path with every non-alphanumeric character as ->/`. If a chat was cut off, read its end and continue from it instead of starting fresh; say which chat you used.
+3. If this file still has `{{placeholders}}`, setup is unfinished: finish it before building.
+4. Run the smoke check, if one is set: `{{SMOKE_COMMAND}}`. If it fails, fix or report that first.
+5. "Where were we": three lines (phase, last done, next action), then wait. "Continue": finish the cut-off step, if any, then the approved next action. A specific task: one line of orientation, then the task.
 
 ## Owner shortcuts
 

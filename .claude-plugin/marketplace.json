@@ -6,7 +6,7 @@
   },
   "metadata": {
     "description": "Ignition Sequence Start: take a new project from idea to shipped MVP with any coding agent. Short setup, lean docs, verified milestones, secrets kept from the model, and seamless switching between chats, agents and accounts.",
-    "version": "0.5.1"
+    "version": "0.6.0"
   },
   "plugins": [
     {

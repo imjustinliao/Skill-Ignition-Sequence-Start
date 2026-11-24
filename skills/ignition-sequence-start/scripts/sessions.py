@@ -1,13 +1,17 @@
 #!/usr/bin/env python3
-"""Find recent coding-agent chats for this project folder, across tools and accounts. Read-only.
+"""Find recent coding-agent chats for this project folder, across tools and accounts.
 
 Usage:
     python3 sessions.py [project-dir] [--limit 8]
     python3 sessions.py [project-dir] --show 12 [--session ID]
+    python3 sessions.py [project-dir] --adopt ID
 
 Lists chats whose working folder is the project (or a folder inside it), newest first, with
 the command to resume each one in its own tool. --show prints the last N user and assistant
-messages of the newest chat (or --session ID) so another agent can pick up where it stopped.
+messages of the newest earlier chat (or --session ID), with a line per tool call, so another agent
+can pick up where it stopped. Chats cut off by a usage limit, an API error or mid-step are flagged.
+Read-only, except --adopt, which copies another account's Claude Code chat into this account's
+folder so `claude --resume` can open it there (the original is left as it was).
 Output is redacted for common key formats, but transcripts can still hold private details:
 summarize what matters into docs/progress.md, never paste transcript text into the repo.
 
@@ -35,7 +39,12 @@ from redact import redact
 HOME = pathlib.Path.home()
 TAIL_BYTES = 400_000
 MAX_CODEX_FILES = 400
-ACTIVE_SECONDS = 90  # a transcript written this recently is most likely the chat running this script
+ACTIVE_SECONDS = 90
+STOP_NOTES = {
+    "usage limit": "ended at a usage limit: cut off mid-task, continue from it",
+    "API error": "ended at an API error: probably cut off mid-task",
+    "mid-step": "ended mid-step (a tool call with no reply): probably cut off",
+}  # a transcript written this recently is most likely the chat running this script
 
 
 def short(text, width):
@@ -46,8 +55,17 @@ def short(text, width):
 def inside(cwd, root):
     if not cwd:
         return False
-    cwd = os.path.normpath(cwd)
-    return cwd == root or cwd.startswith(root + os.sep)
+    for a, b in ((os.path.normpath(cwd), root), (os.path.realpath(cwd), os.path.realpath(root))):
+        if a == b or a.startswith(b + os.sep):
+            return True
+    return False
+
+
+def same_dir(a, b):
+    try:
+        return pathlib.Path(a).resolve() == pathlib.Path(b).resolve()
+    except OSError:
+        return False
 
 
 def when(path):
@@ -161,19 +179,53 @@ def claude_messages(objects):
             yield kind, text
 
 
-LIMIT_RE = re.compile(r"usage limit|hit your limit|limit reached|rate.?limit|out of (extra )?usage|"
-                      r"credit balance|quota", re.I)
+LIMIT_ERRORS = {"rate_limit", "oauth_org_not_allowed", "billing_error", "overloaded_error"}
+LIMIT_RE = re.compile(r"hit your .{0,30}limit|usage limit|out of (extra )?usage|credit balance", re.I)
 
 
-def ended_at_limit(tail):
-    """True when a chat's last real entry is an API/limit error rather than finished work."""
+def claude_stop(tail):
+    """Why a chat stopped, from its last real entry: "usage limit", "API error", "mid-step" or "".
+
+    Claude Code records a limit as an assistant entry with isApiErrorMessage and error
+    "rate_limit" ("You've hit your session limit · resets 8pm"). A chat whose last entry is a
+    tool call or a tool result was killed while working.
+    """
     for obj in reversed(tail):
-        if obj.get("type") not in ("user", "assistant") or obj.get("isSidechain"):
+        kind = obj.get("type")
+        if kind not in ("user", "assistant") or obj.get("isSidechain") or obj.get("isMeta"):
             continue
-        text = claude_text(obj.get("message"), obj.get("type"))
-        return bool(text) and (bool(obj.get("isApiErrorMessage")) or obj.get("type") == "assistant"
-                               and len(text) < 400) and bool(LIMIT_RE.search(text))
-    return False
+        if obj.get("isApiErrorMessage"):
+            text = claude_text(obj.get("message"), kind)
+            limited = obj.get("error") in LIMIT_ERRORS or LIMIT_RE.search(text)
+            return "usage limit" if limited else "API error"
+        content = (obj.get("message") or {}).get("content")
+        blocks = [b.get("type") for b in content if isinstance(b, dict)] if isinstance(content, list) else []
+        if "tool_use" in blocks or "tool_result" in blocks:
+            return "mid-step"
+        return ""
+    return ""
+
+
+def claude_steps(objects):
+    """Messages plus one short line per tool call, so a reader sees what was being done."""
+    for obj in objects:
+        kind = obj.get("type")
+        if kind not in ("user", "assistant") or obj.get("isSidechain") or obj.get("isMeta"):
+            continue
+        text = claude_text(obj.get("message"), kind)
+        if text:
+            yield ("error" if obj.get("isApiErrorMessage") else kind), text
+        content = (obj.get("message") or {}).get("content")
+        for block in content if kind == "assistant" and isinstance(content, list) else []:
+            if isinstance(block, dict) and block.get("type") == "tool_use":
+                args = block.get("input") or {}
+                detail = next((str(args[k]) for k in ("file_path", "path", "command", "pattern", "url",
+                                                      "description", "prompt") if args.get(k)), "")
+                yield "tool", "%s %s" % (block.get("name", "?"), detail)
+
+
+def current_claude_config():
+    return pathlib.Path(os.environ.get("CLAUDE_CONFIG_DIR") or HOME / ".claude").expanduser()
 
 
 def claude_sessions(root):
@@ -192,12 +244,18 @@ def claude_sessions(root):
                     continue
                 title = next((o.get("customTitle") for o in reversed(tail) if o.get("customTitle")), "")
                 last = next((t for k, t in reversed(list(claude_messages(tail))) if k == "user"), "")
-                prefix = "" if config == HOME / ".claude" else "CLAUDE_CONFIG_DIR=%s " % config
+                other = not same_dir(config, current_claude_config())
+                resume = "claude --resume %s" % path.stem
+                if other:
+                    resume = "sessions.py --adopt %s, then %s (it is in another account's folder)" % (
+                        path.stem, resume)
+                work = sum(1 for o in tail if o.get("type") == "assistant" and not o.get("isApiErrorMessage")
+                           and not o.get("isSidechain"))
                 found.append({
                     "tool": "Claude Code", "id": path.stem, "path": path, "when": when(path),
-                    "label": title or last, "resume": "%sclaude --resume %s" % (prefix, path.stem),
-                    "reader": claude_messages, "limit": ended_at_limit(tail),
-                    "account": str(config),
+                    "label": title or last, "resume": resume, "reader": claude_steps,
+                    "stop": claude_stop(tail), "config": config, "other_account": other,
+                    "work": work,
                 })
     return found
 
@@ -273,19 +331,45 @@ def copilot_sessions(root):
     return found
 
 
+def adopt(sessions, session_id):
+    """Copy another account's Claude Code chat into this account so `claude --resume` finds it."""
+    chosen = next((s for s in sessions if s["id"] == session_id and s["tool"] == "Claude Code"), None)
+    if chosen is None:
+        print("No Claude Code chat %s for this folder." % session_id)
+        return 1
+    if not chosen["other_account"]:
+        print("Chat %s already belongs to this account: claude --resume %s" % (session_id, session_id))
+        return 0
+    target = current_claude_config() / "projects" / chosen["path"].parent.name
+    if (target / chosen["path"].name).exists():
+        print("Already copied: claude --resume %s" % session_id)
+        return 0
+    target.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(chosen["path"], target / chosen["path"].name)
+    extra = chosen["path"].with_suffix("")  # subagent and tool-result files, when present
+    if extra.is_dir() and not (target / extra.name).exists():
+        shutil.copytree(extra, target / extra.name)
+    print("Copied chat %s from %s into %s (the original is untouched)." % (session_id, chosen["config"], target))
+    print("Resume it with this account: claude --resume %s" % session_id)
+    return 0
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("project_dir", nargs="?", default=".", type=pathlib.Path)
     parser.add_argument("--limit", type=int, default=8)
     parser.add_argument("--show", type=int, metavar="N", help="print the last N messages")
-    parser.add_argument("--session", help="session id for --show (default: newest)")
+    parser.add_argument("--session", help="session id for --show (default: newest earlier chat)")
+    parser.add_argument("--adopt", metavar="ID", help="copy another account's Claude Code chat into "
+                        "this account (CLAUDE_CONFIG_DIR or ~/.claude) so `claude --resume ID` works")
     args = parser.parse_args()
     root = os.path.normpath(str(args.project_dir.resolve()))
 
     sessions = (claude_sessions(root) + codex_sessions(root, args.limit)
                 + gemini_sessions(root) + copilot_sessions(root))
-    sessions.sort(key=lambda s: s["when"], reverse=True)
+    # newest first; for the same chat in two account folders, this account's copy wins
+    sessions.sort(key=lambda s: (s["when"], not s.get("other_account")), reverse=True)
     unique, seen = [], set()
     for s in sessions:  # one row per conversation (Codex splits long threads across files)
         if (s["tool"], s["id"]) not in seen:
@@ -300,14 +384,31 @@ def main():
 
     progress = pathlib.Path(root) / "docs" / "progress.md"
     saved = when(progress) if progress.is_file() else None
+    if args.adopt:
+        return adopt(sessions, args.adopt)
+
     now = datetime.datetime.now()
-    active = [s for s in sessions if (now - s["when"]).total_seconds() < ACTIVE_SECONDS]
+    current_ids = {os.environ.get(v) for v in ("CLAUDE_CODE_SESSION_ID", "CODEX_THREAD_ID",
+                                                "CODEX_SESSION_ID") if os.environ.get(v)}
+    if current_ids:  # the agent running this script told us which chat it is
+        active = [s for s in sessions if s["id"] in current_ids]
+    else:  # guess: written in the last moments and not stopped by a limit or error
+        active = [s for s in sessions if (now - s["when"]).total_seconds() < ACTIVE_SECONDS
+                  and s.get("stop") not in ("usage limit", "API error")][:1]
+
+    def cut_off(s):
+        return s not in active and (s.get("stop") or (saved and s["when"] > saved))
+
+    earlier = [s for s in sessions if s not in active]
+    # a chat that is only "continue" and another limit error is a retry; prefer the one with the work
+    candidates = [s for s in earlier if cut_off(s)]
+    pick = next((s for s in candidates if s.get("work", 3) >= 3), candidates[0] if candidates else None)
 
     if args.show:
         if args.session:
             chosen = next((s for s in sessions if s["id"] == args.session), None)
         else:
-            chosen = next((s for s in sessions if s not in active), None)
+            chosen = pick or (earlier[0] if earlier else None)
             for s in active:
                 print("Skipped %s %s: active right now, probably this chat (pass --session to "
                       "read it anyway)." % (s["tool"], s["id"]))
@@ -316,28 +417,45 @@ def main():
             return 1
         print("%s session %s, last active %s" % (chosen["tool"], chosen["id"],
                                                  chosen["when"].strftime("%Y-%m-%d %H:%M")))
-        print("Resume it in that tool: %s\n" % chosen["resume"])
+        print("Resume it in that tool: %s" % chosen["resume"])
+        if chosen.get("stop"):
+            print("It stopped at: %s" % STOP_NOTES[chosen["stop"]])
+        print()
         if chosen["reader"] is None:
             print("Reading this tool's transcript is not supported; resume it in the tool instead.")
             return 0
-        messages = list(chosen["reader"](read_lines(chosen["path"])))[-args.show:]
+        # tool lines don't count against N, so N messages always come with their steps
+        entries = list(chosen["reader"](read_lines(chosen["path"])))
+        kept, talk = [], 0
+        for role, text in reversed(entries):
+            if role != "tool":
+                talk += 1
+                if talk > args.show:
+                    break
+            kept.append((role, text))
+        messages = list(reversed(kept))
         for role, text in messages:
-            print("[%s] %s\n" % (role, short(text, 600)))
+            print("[%s] %s" % (role, short(text, 160 if role == "tool" else 600)))
         return 0
 
     print("Chats for %s (newest first; redacted):\n" % root)
     for s in sessions[: args.limit]:
         note = "  (active now: probably this chat)" if s in active else ""
-        if s.get("limit"):
-            note += "  [ended at a usage limit: work was probably cut off mid-task]"
+        if s.get("stop") and s not in active:
+            note += "  [%s]" % STOP_NOTES[s["stop"]]
         if saved and s["when"] > saved and s not in active:
             note += "  [newer than docs/progress.md: its latest work may be unsaved]"
         print("%s  %-11s  %s%s" % (s["when"].strftime("%Y-%m-%d %H:%M"), s["tool"], s["id"], note))
         if s["label"]:
             print("    %s" % short(s["label"], 100))
+        if s.get("other_account"):
+            print("    account folder: %s" % s["config"])
         print("    resume: %s" % s["resume"])
-    print("\nNext: if the top chat is newer than docs/progress.md or ended at a limit, run "
-          "`sessions.py --show 20` to read where it stopped, then continue from it.")
+    if pick:
+        print("\nTake over: %s %s was cut off. Read where it stopped with `sessions.py --show 20` "
+              "(it picks this chat), continue from it, then update docs/progress.md." % (pick["tool"], pick["id"]))
+    else:
+        print("\nNo earlier chat looks cut off; docs/progress.md should say where things stand.")
     print("\nNot listed: Cursor, Windsurf, Cline and IDE chats (see their chat history).")
     return 0
 
