@@ -61,7 +61,7 @@ That's it. The rest is optional.
 ## Switching chats, agents or accounts
 
 - Everything that matters lives in your project's files, not in the chat, so a new chat or a different agent can continue right away.
-- Hit a usage limit mid-task? Open another account or agent in the same folder and say **continue**. If the last chat ended before it saved its progress, the agent finds that chat on your computer (Claude Code, Codex, Gemini CLI and Copilot CLI) and picks up from there.
+- Hit a usage limit mid-task? Open another account or agent in the same folder and say **continue**. The agent always looks for the earlier chat first (including other accounts' config folders), and if it was cut off before saving its progress, it finds that chat on your computer (Claude Code, Codex, Gemini CLI and Copilot CLI) and picks up from there.
 - Moving to another computer? Say **handoff** first, so everything is pushed.
 
 ## Your keys stay yours

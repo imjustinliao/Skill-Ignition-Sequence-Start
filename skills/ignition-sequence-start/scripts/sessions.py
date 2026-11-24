@@ -11,7 +11,8 @@ messages of the newest chat (or --session ID) so another agent can pick up where
 Output is redacted for common key formats, but transcripts can still hold private details:
 summarize what matters into docs/progress.md, never paste transcript text into the repo.
 
-Reads: Claude Code (~/.claude*/projects, or CLAUDE_CONFIG_DIR), Codex (CODEX_HOME or ~/.codex,
+Reads: Claude Code (every config folder with a projects/ folder: ~/.claude*, nested ones such as
+~/.claude/spares/*, ~/.config/claude*, CLAUDE_CONFIG_DIR, IGNITION_CLAUDE_DIRS), Codex (CODEX_HOME or ~/.codex,
 .jsonl and .jsonl.zst; .zst needs the zstd command), Gemini CLI (~/.gemini/tmp), GitHub Copilot
 CLI (COPILOT_HOME or ~/.copilot). Cursor, Windsurf, Cline and IDE chats keep history in their
 own databases: open their chat history instead. Python 3.8+ standard library only.
@@ -113,15 +114,28 @@ def tail_objects(path):
 # ---- Claude Code -------------------------------------------------------------
 
 def claude_dirs():
-    dirs = []
-    if os.environ.get("CLAUDE_CONFIG_DIR"):
-        dirs.append(pathlib.Path(os.environ["CLAUDE_CONFIG_DIR"]).expanduser())
-    dirs += [pathlib.Path(p) for p in sorted(glob.glob(str(HOME / ".claude*")))]
+    """Every Claude Code config folder on this machine, one per account.
+
+    Accounts are usually separated with CLAUDE_CONFIG_DIR, and people put those folders in many
+    places (~/.claude-work, ~/.claude/spares/x, ~/.config/claude-b, ...). So look at the obvious
+    spots, then any hidden folder up to three levels under home that has a `projects` folder.
+    Extra places: IGNITION_CLAUDE_DIRS (os.pathsep-separated).
+    """
+    candidates = []
+    for var in ("CLAUDE_CONFIG_DIR", "IGNITION_CLAUDE_DIRS"):
+        candidates += [pathlib.Path(p).expanduser() for p in os.environ.get(var, "").split(os.pathsep) if p]
+    for pattern in (".claude*", ".claude*/*", ".claude*/*/*", ".config/claude*", ".config/claude*/*",
+                    ".*/claude*", ".*/.claude*"):
+        candidates += [pathlib.Path(p) for p in sorted(glob.glob(str(HOME / pattern)))]
     seen, result = set(), []
-    for d in dirs:
-        if (d / "projects").is_dir() and d.resolve() not in seen:
-            seen.add(d.resolve())
-            result.append(d)
+    for d in candidates:
+        try:
+            key = d.resolve()
+            if d.is_dir() and (d / "projects").is_dir() and key not in seen:
+                seen.add(key)
+                result.append(d)
+        except OSError:
+            continue
     return result
 
 
@@ -147,6 +161,21 @@ def claude_messages(objects):
             yield kind, text
 
 
+LIMIT_RE = re.compile(r"usage limit|hit your limit|limit reached|rate.?limit|out of (extra )?usage|"
+                      r"credit balance|quota", re.I)
+
+
+def ended_at_limit(tail):
+    """True when a chat's last real entry is an API/limit error rather than finished work."""
+    for obj in reversed(tail):
+        if obj.get("type") not in ("user", "assistant") or obj.get("isSidechain"):
+            continue
+        text = claude_text(obj.get("message"), obj.get("type"))
+        return bool(text) and (bool(obj.get("isApiErrorMessage")) or obj.get("type") == "assistant"
+                               and len(text) < 400) and bool(LIMIT_RE.search(text))
+    return False
+
+
 def claude_sessions(root):
     escaped = re.sub(r"[^A-Za-z0-9]", "-", root)
     found = []
@@ -167,7 +196,8 @@ def claude_sessions(root):
                 found.append({
                     "tool": "Claude Code", "id": path.stem, "path": path, "when": when(path),
                     "label": title or last, "resume": "%sclaude --resume %s" % (prefix, path.stem),
-                    "reader": claude_messages,
+                    "reader": claude_messages, "limit": ended_at_limit(tail),
+                    "account": str(config),
                 })
     return found
 
@@ -268,6 +298,8 @@ def main():
         print("Cursor, Windsurf, Cline and IDE chats: open that tool's chat history in this folder.")
         return 1
 
+    progress = pathlib.Path(root) / "docs" / "progress.md"
+    saved = when(progress) if progress.is_file() else None
     now = datetime.datetime.now()
     active = [s for s in sessions if (now - s["when"]).total_seconds() < ACTIVE_SECONDS]
 
@@ -296,10 +328,16 @@ def main():
     print("Chats for %s (newest first; redacted):\n" % root)
     for s in sessions[: args.limit]:
         note = "  (active now: probably this chat)" if s in active else ""
+        if s.get("limit"):
+            note += "  [ended at a usage limit: work was probably cut off mid-task]"
+        if saved and s["when"] > saved and s not in active:
+            note += "  [newer than docs/progress.md: its latest work may be unsaved]"
         print("%s  %-11s  %s%s" % (s["when"].strftime("%Y-%m-%d %H:%M"), s["tool"], s["id"], note))
         if s["label"]:
             print("    %s" % short(s["label"], 100))
         print("    resume: %s" % s["resume"])
+    print("\nNext: if the top chat is newer than docs/progress.md or ended at a limit, run "
+          "`sessions.py --show 20` to read where it stopped, then continue from it.")
     print("\nNot listed: Cursor, Windsurf, Cline and IDE chats (see their chat history).")
     return 0
 

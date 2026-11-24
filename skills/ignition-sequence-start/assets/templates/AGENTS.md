@@ -27,7 +27,7 @@ Everything goes in one of these: a technical choice and its source in the doc it
 2. If this file still has `{{placeholders}}`, setup is unfinished: finish it before building.
 3. Run the smoke check, if one is set: `{{SMOKE_COMMAND}}`. If it fails, fix or report that first.
 4. "Where were we": three lines (phase, last done, next action), then wait. "Continue": do the approved next action. A specific task: one line of orientation, then the task.
-5. If `progress.md` does not explain the latest commits or work in flight, the last session ended abruptly. Find its chat before guessing: this tool's resume list for this folder, or `scripts/sessions.py` in the ignition-sequence-start skill folder (usually `~/.claude/skills/` or `~/.agents/skills/`) if it is installed.
+5. Look for an earlier chat for this folder, in any tool or account, every time you arrive (a usage limit or crash leaves no note). If `scripts/sessions.py` in the ignition-sequence-start skill folder (usually `~/.claude/skills/` or `~/.agents/skills/`) is installed, run it and read its flags; otherwise check this tool's resume list. If a chat is newer than `progress.md`, ended at a limit, or `progress.md` does not explain the latest commits or work in flight, read its tail and continue from it instead of starting fresh. Say which chat you used.
 
 ## Owner shortcuts
 

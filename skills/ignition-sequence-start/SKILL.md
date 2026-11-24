@@ -5,7 +5,7 @@ license: MIT
 compatibility: Any coding agent that can read files and run shell commands. Python 3.8+ is optional, for the scripts.
 metadata:
   author: Justin Liao
-  version: "0.5.0"
+  version: "0.5.1"
   repository: imjustinliao/Skill-Ignition-Sequence-Start
 ---
 
@@ -33,7 +33,7 @@ Drawn from how leading agentic-coding practitioners and teams work (sources in t
 
 ## Route the request
 
-Whenever project docs exist, run the arrival check first (`references/continuity.md` › Arriving), including the project's version, and lead with its short status. Then:
+Whenever project docs exist, run the arrival check first (`references/continuity.md` › Arriving), including the project's version and `sessions.py` for a cut-off earlier chat (another account or agent, a usage limit), and lead with its short status. Never start fresh over an unsaved earlier chat. Then:
 
 | Situation or phrase | Do | Read |
 |---------------------|----|------|
@@ -41,7 +41,7 @@ Whenever project docs exist, run the arrival check first (`references/continuity
 | "Ignition sequence start" in a project already set up | **Resume**, then offer to revisit a setup step | `references/continuity.md` › Arriving |
 | `docs/progress.md` › Setup has open items | **Continue setup** at the first open item | `references/intake.md` |
 | Docs exist; new chat, agent or account; "continue", "where were we" | **Resume** | `references/continuity.md` › Arriving |
-| "Continue from my other chat", or `progress.md` doesn't explain the latest work | **Find the last chat** | `references/continuity.md` › Finding the last chat |
+| "Continue", a new account or agent after a usage limit, "continue from my other chat", or `sessions.py` flags an unsaved chat | **Find the last chat** (every resume checks) | `references/continuity.md` › Finding the last chat |
 | "Handoff", switching agent, account or machine, context running low | **Hand off** | `references/continuity.md` › Leaving |
 | The project was set up with an older version of this skill (`check.py` warns) | **Upgrade the project** at a safe point for its stage | `references/upgrade.md` |
 | "Status", a list of fixes, "new feature", "add backend", "change …", "clean up", "keep going" | **Build loop** | `references/workflow.md` (matching section) |
@@ -98,7 +98,7 @@ Run them; no need to read them first. Python 3.8+ standard library only.
 - `update.py [--check]`: brings the skill itself up to date from its repository (git pull for clones, a safe file update for copies, the plugin manager for plugins). Never overwrites files you edited; off with `IGNITION_SKIP_UPDATE=1`.
 - `scaffold.py . --name "<Name>" [--with design,architecture] [--agents claude,cursor,gemini,aider] [--parallel] [--dry-run]`: creates the docs and secret guards and a git pre-push hook that blocks leaked secrets. Never overwrites.
 - `check.py`: health check: project version vs the skill, unfinished setup, docs vs git, tracked secrets and key patterns, stray Markdown files, oversized docs. Run on arrival and before a handoff.
-- `sessions.py [--show N]`: finds earlier chats for this folder in Claude Code, Codex, Gemini CLI and Copilot CLI (any account on this machine), with resume commands; `--show` prints the last messages of the most recent earlier chat, redacted.
+- `sessions.py [--show N]`: finds earlier chats for this folder in Claude Code, Codex, Gemini CLI and Copilot CLI (any account on this machine), with resume commands, flagging chats that ended at a usage limit or are newer than `docs/progress.md`; `--show` prints the last messages of the most recent earlier chat, redacted.
 
 Without Python, copy `assets/templates/` by hand (`gitignore` → `.gitignore`, `claude-settings.json` → `.claude/settings.json`) and find chats as `references/continuity.md` describes.
 

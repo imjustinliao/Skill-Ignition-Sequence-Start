@@ -27,7 +27,7 @@ An upgrade never changes the owner's approval mode, commit format, stack or plan
 
 ## Versions
 
-### 0.5.0
+### 0.5.1
 
 - **New for the owner**: a live preview link (localhost, or the project's equivalent) stays open while the agent builds, so every change shows up as it lands.
 - **Migration**: add the Live preview line and the paragraph under it to `AGENTS.md` › Verify, filled with the project's preview command and link.
